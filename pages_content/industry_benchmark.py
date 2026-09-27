@@ -172,26 +172,24 @@ def render(ctx):
             pct_overall = 0
 
         sector_block = (
-            f"""<span style="display:inline-block; margin-top:8px; background-color:rgba(100,116,139,0.10); color:#64748B; font-size:15px; font-weight:bold; padding:3px 14px; border-radius:8px;">กลุ่มมีเพียง 1 หุ้น</span>"""
+            f"""<span style="display:inline-block; margin-top:6px; background-color:rgba(100,116,139,0.10); color:#64748B; font-size:15px; font-weight:bold; padding:3px 14px; border-radius:8px;">กลุ่มมีเพียง 1 หุ้น</span>"""
             if single_member_sector else
-            f"""<div style="margin-top:8px;"><span style="display:inline-block; background-color:{cup_bg}; color:{star_color}; font-size:14px; font-weight:bold; padding:4px 16px; border-radius:20px;">Top {pct_in_sector}%</span></div>"""
+            ""
         )
 
         st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:360px; text-align:center; display:flex; flex-direction:column; overflow:hidden; box-sizing:border-box;">
     <div style="font-size:16px; color:#64748B; font-weight:bold; margin-bottom:8px;">RANKING</div>
     <div style="background-color:{cup_bg}; border:1.5px solid {star_color}; border-radius:12px; padding:8px 8px 10px 8px; margin-bottom:10px; flex:1; display:flex; flex-direction:column; justify-content:center;">
-    <div style="font-size:14px; color:#0F172A; font-weight:bold;">ทั้งตลาด</div>
+    <span style="display:inline-block; margin:0 auto 6px auto; background-color:{star_color}; color:#FFFFFF; font-size:13px; font-weight:bold; padding:3px 16px; border-radius:14px;">ทั้งตลาด</span>
     <div style="font-size:13px; color:#64748B; margin-bottom:2px;">{n_all} หุ้นที่ติดตาม</div>
     <div><span style="font-size:32px; color:#0F172A; font-weight:800;">{rank_txt(overall_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_all} หุ้น</span></div>
-    <div style="margin-top:8px;"><span style="display:inline-block; background-color:{star_color}; color:#FFFFFF; font-size:14px; font-weight:bold; padding:4px 16px; border-radius:20px; box-shadow:0 2px 6px rgba(0,0,0,0.12);">Top {pct_overall}%</span></div>
     </div>
     <div style="border-top:1px solid #E2E8F0; padding-top:10px; flex:1; display:flex; flex-direction:column; justify-content:center;">
-    <div style="font-size:14px; color:#64748B;">ในกลุ่ม</div>
+    <span style="display:inline-block; margin:0 auto 6px auto; background-color:{cup_bg}; color:{star_color}; border:1.5px solid {star_color}; font-size:13px; font-weight:bold; padding:2px 16px; border-radius:14px;">ในกลุ่ม</span>
     <div style="font-size:13px; color:#64748B; margin-bottom:2px;">{ctx.stock_info.get('sector','-')}</div>
     <div><span style="font-size:32px; color:#0F172A; font-weight:800;">{rank_txt(sector_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_sector} หุ้น</span></div>{sector_block}
     </div>
     </div>""", unsafe_allow_html=True)
-
     # ---------------- STRATEGIC MATRIX (ย้ายมาจาก r2_c3 เดิม + ขยายใหญ่ขึ้น) ----------------
     with r1_c3:
         matrix_df = ctx.scores_df[['ticker', 'health_score', 'overall_score']].dropna().copy()
