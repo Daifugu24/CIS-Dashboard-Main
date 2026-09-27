@@ -12,6 +12,12 @@ pages_content/risk_analysis.py
 - Logic การเช็คข้อมูลไม่พอ (_is_missing / risk_score_available / fallback CVaR & PSR) ยึดตาม main ทั้งหมด
   เพื่อไม่ให้หน้าจอพังหรือโชว์เลขหลอกเวลาไม่มีข้อมูลจริง
 - ส่วน RISK-ADJUSTED RETURN ยึดตาม main เป็นหลัก (ใช้ _fmt_or_na แสดง N/A แทนตัวเลข 0.00 หลอกๆ)
+
+=== PATCH NOTE (เพิ่มพื้นหลังอ่อนๆ ให้การ์ด RISK SUMMARY ตามสีสถานะความเสี่ยง) ===
+- เพิ่มฟังก์ชัน _hex_to_rgba() สำหรับแปลงสี hex (risk_color) เป็น rgba โปร่งแสง
+- การ์ด RISK SUMMARY (gauge) เปลี่ยนพื้นหลังจากสีขาวล้วน เป็นสีอ่อนๆ ของ risk_color เดียวกับ
+  ที่ใช้กับกรอบ/ตัวหนังสือสถานะ (LOW/MODERATE/HIGH RISK) อยู่แล้ว เพื่อให้การ์ดดูมีน้ำหนักสี
+  ตรงกับสถานะความเสี่ยงมากขึ้น ไม่กระทบ logic การคำนวณ risk_score / risk_status ใดๆ
 """
 
 import streamlit as st
@@ -35,6 +41,13 @@ def _is_missing(val):
         return bool(pd.isna(val))
     except (TypeError, ValueError):
         return False
+
+
+def _hex_to_rgba(hex_color, alpha):
+    """แปลงสี hex (เช่น risk_color) เป็น rgba โปร่งแสง ใช้ทำพื้นหลังอ่อนๆ ตามสีสถานะ"""
+    hex_color = hex_color.lstrip('#')
+    r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
 
 
 def _fallback_cvar_95(stock_daily, confidence=0.95):
@@ -124,8 +137,12 @@ def render(ctx):
             score_display = "N/A"
             needle_color = "#94A3B8"
 
+        # พื้นหลังการ์ดนี้ใช้สีอ่อนๆ ของ risk_color เดียวกับกรอบ/ตัวหนังสือสถานะ
+        # (LOW/MODERATE/HIGH RISK) เพื่อให้ทั้งการ์ดมีน้ำหนักสีตรงกับสถานะความเสี่ยง
+        risk_summary_bg = _hex_to_rgba(risk_color, 0.08)
+
         st.markdown(
-            f"""<div style="background-color:#FFFFFF; border:2px solid {risk_color}; border-radius:12px; padding:16px; min-height:260px; display:flex; flex-direction:column; justify-content:space-between; text-align:center;">
+            f"""<div style="background-color:{risk_summary_bg}; border:2px solid {risk_color}; border-radius:12px; padding:16px; min-height:260px; display:flex; flex-direction:column; justify-content:space-between; text-align:center;">
     <div style="font-size:16px; font-weight:bold; color:#64748B; letter-spacing:0.5px; text-align:left;">RISK SUMMARY</div>
     <div style="margin:auto 0;"><svg viewBox="0 0 100 55" style="width:140px; height:90px; display:block; margin:0 auto;">
     <path d="M 12 50 A 38 38 0 0 1 35 15" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" />
