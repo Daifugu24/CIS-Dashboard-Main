@@ -142,8 +142,9 @@ def _score_donut_card(label, score, badge, desc, color, height=None):
 
 def render(ctx):
     st.markdown(f"""<div style="margin-bottom:20px;">
-<div style="font-size:26px; font-weight:700; color:#0F172A; letter-spacing:0.3px;">AI PREDICTION</div>
-<div style="font-size:16px; color:#64748B; margin-top:4px;">ประเมินทิศทางราคาหุ้นในอีก 10 วันทำการด้วยโมเดล Random Forest</div>
+<div style="font-size:12px; color:{MUTED}; margin-bottom:4px;">Home / Module 4 / AI Prediction</div>
+<div style="font-size:19px; font-weight:700; color:#0F172A; letter-spacing:0.3px;">AI PREDICTION</div>
+<div style="font-size:12px; color:#64748B; margin-top:4px;">ประเมินทิศทางราคาหุ้นในอีก 10 วันทำการด้วยโมเดล Random Forest</div>
 </div>""", unsafe_allow_html=True)
 
     # ============================================================
@@ -194,9 +195,12 @@ def render(ctx):
 
     score_color = GREEN if ai_score_val >= 70 else (AMBER if ai_score_val >= 50 else RED)
 
+    # PATCH: เอา override ที่เคยลดเกรดสีเขียว -> เหลือง เมื่อ reliability_low ออก
+    # เพราะทำให้ status_color ไม่ตรงกับสีวงแหวนของการ์ด AI SCORE อีกต่อไป (การ์ด
+    # AI SCORE ใช้ score_color ตรงๆ เสมอ) ตอนนี้ status_color = score_color เป๊ะๆ
+    # ไม่มีการปรับลดสีเพิ่มเติม — ความไม่น่าเชื่อถือของโมเดลยังคงสื่อสารผ่านกล่อง
+    # คำเตือนสีแดง (warn_line) แยกต่างหากเหมือนเดิม ไม่ผสมกับธีมสีหลักอีกต่อไป
     status_color = score_color
-    if reliability_low and status_color == GREEN:
-        status_color = AMBER
 
     direction_th = "ขาขึ้น" if prob_up >= 50 else "ขาลง"
     signal_display = f"{signal} ⚠" if reliability_low else signal
@@ -494,6 +498,12 @@ def render(ctx):
 
     show_chart(fig_forecast, key="ai_forecast", expand_height=700)
 
+    st.markdown(
+        f"""<div style="font-size:11px; color:{MUTED}; padding:8px 16px 12px 16px; background:#FFFFFF; border:1px solid #D9E2EC; border-top:none; border-radius:0 0 12px 12px;">
+* เส้นทึบฟ้า = ราคาจริงที่เกิดขึ้นแล้ว | เส้นประสี = ค่ากลางที่โมเดลคาดการณ์ | แถบทึบแสง = ช่วงคาดการณ์ (~80%) จาก Volatility จริง ({safe(ctx.stock_info.get('volatility')):.1f}%) — ไม่ใช่การรับประกันผลตอบแทน</div>""",
+        unsafe_allow_html=True
+    )
+
     st.markdown("<div style='margin-top:22px;'></div>", unsafe_allow_html=True)
 
     # ============================================================
@@ -511,40 +521,19 @@ def render(ctx):
             fig_shap = go.Figure(
                 go.Bar(
                     x=fi['importance'], y=fi['feature'], orientation='h',
-                    marker=dict(color='#A855F7'),
+                    marker=dict(color=BLUE),
                     text=[f"{v:.3f}" for v in fi['importance']],
                     textposition='outside',
                     textfont=dict(size=11, color='#334155')
                 )
             )
             fig_shap.update_layout(
-                height=310,
-                margin=dict(l=10, r=50, t=15, b=15),
+                height=240,
+                margin=dict(l=10, r=50, t=10, b=10),
                 paper_bgcolor="#FFFFFF",
                 plot_bgcolor="#FFFFFF",
-                xaxis=dict(gridcolor="#D9E2EC", tickfont=dict(size=11, color=MUTED), zeroline=False),
-                yaxis=dict(tickfont=dict(size=11.5, color="#334155"), gridcolor="#D9E2EC", zeroline=False),
-                showlegend=False
-            )
-            fig_shap.update_layout(
-                height=310,
-                margin=dict(l=10, r=50, t=15, b=15),
-                paper_bgcolor="#FFFFFF",
-                plot_bgcolor="#FFFFFF",
-                xaxis=dict(
-                    title=dict(
-                        text="คะแนน",
-                        font=dict(size=11.5, color=MUTED)
-                    ),
-                    gridcolor="#D9E2EC",
-                    tickfont=dict(size=11, color=MUTED),
-                    zeroline=False
-                ),
-                yaxis=dict(
-                    tickfont=dict(size=11.5, color="#334155"),
-                    gridcolor="#D9E2EC",
-                    zeroline=False
-                ),
+                xaxis=dict(gridcolor="#D9E2EC", tickfont=dict(size=10, color=MUTED), zeroline=False),
+                yaxis=dict(tickfont=dict(size=10.5, color="#334155"), gridcolor="#D9E2EC", zeroline=False),
                 showlegend=False
             )
             show_chart(fig_shap, key="ai_feature_importance", expand_height=650)
@@ -554,11 +543,11 @@ def render(ctx):
     with exp_c2:
         top_feat = fi.sort_values('importance', ascending=False).iloc[0]['feature'] if not fi.empty else "N/A"
         st.markdown(
-            f"""<div style="background-color:#FFFFFF; border:1px solid #D9E2EC; border-radius:12px; padding:22px; min-height:310px; display:flex; flex-direction:column; justify-content:center;">
-<div style="font-size:13.5px; font-weight:bold; color:{MUTED}; letter-spacing:0.5px; margin-bottom:12px;">
+            f"""<div style="background-color:#FFFFFF; border:1px solid #D9E2EC; border-radius:12px; padding:18px; min-height:240px; display:flex; flex-direction:column; justify-content:center;">
+<div style="font-size:13px; font-weight:bold; color:{MUTED}; letter-spacing:0.5px; margin-bottom:10px;">
 EXPLAINABLE AI SUMMARY
 </div>
-<p style="font-size:14px; color:#334155; line-height:1.7; margin:0;">
+<p style="font-size:13.5px; color:#334155; line-height:1.6; margin:0;">
 โมเดลใช้ 6 ตัวชี้วัดเชิงเทคนิคในการทำนาย โดย feature ที่มีอิทธิพลต่อผลทำนายของ
 <b>{ctx.selected_ticker}</b> สูงสุดคือ
 <b style="color:{BLUE};">{top_feat}</b>

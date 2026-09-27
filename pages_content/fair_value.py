@@ -14,6 +14,12 @@ pages_content/fair_value.py
     ctx.current_price, ctx.change_pct, ctx.change_val, ctx.change_color, ctx.change_sign, ctx.arrow_sign
 
 ห้ามแก้ CSS ส่วนกลางหรือ helper function ใน common.py จากไฟล์นี้ — ถ้าจำเป็นต้องแก้ ให้แจ้ง Layout Lead ก่อน
+
+=== PATCH NOTE (ตัดแถว Min/Max ออกจากการ์ด FAIR VALUE RANGE) ===
+- เอาแถว "Min {val_bear} THB / Max {val_bull} THB" ที่อยู่ใต้แถบไล่สี (gradient bar)
+  ออก เพราะตัวเลขชุดเดียวกัน (Lower Estimate / Upper Estimate) ถูกแสดงซ้ำอยู่แล้ว
+  ในการ์ด "FAIR VALUE RANGE — DCF vs P/E RELATIVE" แถวถัดไป (r2_c1) ไม่กระทบ
+  ตัวแปร val_bear/val_bull หรือ logic การคำนวณตำแหน่งหมุด (pos_cur/pos_base) ใดๆ
 """
 import streamlit as st
 import pandas as pd
@@ -141,12 +147,8 @@ def render(ctx):
         </div>
         <div style="position:absolute; left:{pos_base:.1f}%; top:34px; transform:translateX(-50%); white-space:nowrap;">
         <div style="width:0; height:0; margin:0 auto; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:7px solid {val_color};"></div>
-        <div style="background:{val_color}; color:#FFFFFF; font-size:12px; font-weight:bold; border-radius:8px; padding:6px 12px;">Blended Fair Value <span style="font-weight:normal; opacity:0.9;">{val_base:.2f} THB</span></div>
+        <div style="background:{val_color}; color:#FFFFFF; font-size:12px; font-weight:bold; border-radius:8px; padding:6px 12px;">Estimated Fair Value <span style="font-weight:normal; opacity:0.9;">{val_base:.2f} THB</span></div>
         </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748B; margin-top:4px;">
-        <div>Min<br><b style="color:#0F172A; font-size:13px;">{val_bear:.2f} THB</b></div>
-        <div style="text-align:right;">Max<br><b style="color:#0F172A; font-size:13px;">{val_bull:.2f} THB</b></div>
         </div>
         </div>""",
             unsafe_allow_html=True
@@ -328,7 +330,7 @@ def render(ctx):
         fv_hist = ctx.fair_value_yearly_df[ctx.fair_value_yearly_df['ticker'] == ctx.selected_ticker].sort_values('year') if not ctx.fair_value_yearly_df.empty else pd.DataFrame()
         if not fv_hist.empty:
             fig_hist_val = go.Figure()
-            fig_hist_val.add_trace(go.Scatter(x=fv_hist['year'].astype(str), y=fv_hist['fair_value'], mode='lines+markers', name='Fair Value', line=dict(color='#A855F7', width=1.8, dash='dash')))
+            fig_hist_val.add_trace(go.Scatter(x=fv_hist['year'].astype(str), y=fv_hist['fair_value'], mode='lines+markers', name='Fair Value', line=dict(color=val_color, width=1.8, dash='dash'), marker=dict(size=8, color=val_color)))
             fig_hist_val.add_trace(go.Scatter(x=fv_hist['year'].astype(str), y=fv_hist['price'], mode='lines+markers', name='Actual Price', line=dict(color='#38BDF8', width=2), marker=dict(size=9, color='#38BDF8')))
             fig_hist_val.update_layout(
                 height=190, margin=dict(l=25, r=15, t=10, b=55), paper_bgcolor="#FFFFFF", plot_bgcolor="#FFFFFF",

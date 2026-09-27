@@ -78,28 +78,9 @@ pages_content/industry_benchmark.py
   สมส่วนกับความสูงเฉลี่ยของการ์ด Dimension ในเคสส่วนใหญ่ (ไม่กระทบ logic การ
   คำนวณ percentile / ai_score เดิม)
 
-=== PATCH NOTE 7 (ย่อ RADAR ให้ label ไม่ล้นตอนบีบความสูง) ===
-- ระหว่างปรับความสูงกราฟ RADAR ให้เข้ากับเลย์เอาต์ใหม่ ได้ลอง shrink
-  polar.domain ลงเพื่อเผื่อระยะขอบให้ label ไม่ชนกรอบการ์ด แต่ค่าที่ใช้ตอนนั้น
-  หดโดเมนแคบเกินไป ทำให้วงกลมของกราฟดูเล็ก มีพื้นที่ว่างเหลือรอบขอบเยอะเกินจำเป็น
-  (แก้ต่อใน PATCH NOTE 8 ด้านล่าง)
-
-=== PATCH NOTE 8 (bugfix): PATCH NOTE 7 หด polar.domain มากไป ===
-- PATCH NOTE 7 หด polar.domain มากไป ทำให้ตัวกราฟวงกลมดูเล็กเกินไป เหลือพื้นที่ว่างเยอะรอบขอบ
-  (โดยเฉพาะช่วงบนใต้ title) แก้โดยขยาย domain ให้กราฟใหญ่ขึ้นอีกครั้ง แต่ยังเว้นระยะพอให้ label
-  ไม่ชนขอบกรอบเหมือนที่ตั้งใจไว้ใน PATCH NOTE 7 (กรอบนอก 470px เท่าเดิม)
-
-=== PATCH NOTE 9 (merge resolution: รวม branch "ลอง" x "main") ===
-- ลบบล็อกดาวน์โหลด CSV ("EXPORT & INDUSTRY DATA") ที่อยู่ท้ายหน้าออกทั้งหมด ตามที่ branch
-  "ลอง" ตั้งใจไว้ (ระบุไว้ชัดว่า "ตามคำขอ") ไม่กระทบ logic หรือการ์ดอื่นใดในหน้านี้
-- การ์ด RANKING: รวมข้อดีของทั้งสอง branch เข้าด้วยกัน — คงป้าย "Top {pct}%" ของบล็อก
-  "ทั้งตลาด" ไว้ (จาก main เพราะเป็นข้อมูลที่มีประโยชน์ และตรงกับ PATCH NOTE แรกสุดของไฟล์นี้)
-  และคง flex:1 + justify-content:center ของทั้งสองบล็อกไว้ด้วย (จาก "ลอง" เพราะการ์ดนี้ fix
-  height 360px + overflow:hidden — ถ้าไม่ใช้ flex เนื้อหาเสี่ยงโดนตัดหรือดูไม่สมดุลระหว่างสองบล็อก)
-- PEER COMPARISON: พบว่า branch "ลอง" มีโค้ดคำนวณ val_c และ timing_b/ai_b/risk_b/name_disp/
-  rows_html ซ้ำอยู่ 2 ชุดในลูปเดียวกัน (โผล่ทั้งก่อนและหลัง conflict marker) ซึ่งเป็นบั๊กจริง —
-  ถ้าปล่อยไว้แถวของหุ้นแต่ละตัวจะถูก append เข้า rows_html สองครั้ง ทำให้ตารางมีแถวซ้ำ 2 เท่า
-  แก้โดยเหลือโค้ดคำนวณแต่ละส่วนไว้ชุดเดียวต่อรอบ loop
+=== PATCH NOTE 7 (ลบ EXPORT & INDUSTRY DATA ออก) ===
+- ลบบล็อกดาวน์โหลด CSV ("EXPORT & INDUSTRY DATA") ที่อยู่ท้ายหน้าออกทั้งหมด
+  ตามคำขอ ไม่กระทบ logic หรือการ์ดอื่นใดในหน้านี้
 """
 import streamlit as st
 import pandas as pd
@@ -199,19 +180,16 @@ def render(ctx):
         st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:360px; text-align:center; display:flex; flex-direction:column; overflow:hidden; box-sizing:border-box;">
     <div style="font-size:16px; color:#64748B; font-weight:bold; margin-bottom:8px;">RANKING</div>
     <div style="background-color:{cup_bg}; border:1.5px solid {star_color}; border-radius:12px; padding:8px 8px 10px 8px; margin-bottom:10px; flex:1; display:flex; flex-direction:column; justify-content:center;">
-    <div style="font-size:14px; color:#0F172A; font-weight:bold;">ทั้งตลาด</div>
+    <span style="display:inline-block; margin:0 auto 6px auto; background-color:{star_color}; color:#FFFFFF; font-size:13px; font-weight:bold; padding:3px 16px; border-radius:14px;">ทั้งตลาด</span>
     <div style="font-size:13px; color:#64748B; margin-bottom:2px;">{n_all} หุ้นที่ติดตาม</div>
     <div><span style="font-size:32px; color:#0F172A; font-weight:800;">{rank_txt(overall_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_all} หุ้น</span></div>
-    <span style="display:inline-block; margin-top:6px; background-color:{star_color}; color:#FFFFFF; font-size:14px; font-weight:bold; padding:3px 14px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.12);">Top {pct_overall}%</span>
     </div>
     <div style="border-top:1px solid #E2E8F0; padding-top:10px; flex:1; display:flex; flex-direction:column; justify-content:center;">
-    <div style="font-size:14px; color:#64748B;">ในกลุ่ม</div>
+    <span style="display:inline-block; margin:0 auto 6px auto; background-color:{cup_bg}; color:{star_color}; border:1.5px solid {star_color}; font-size:13px; font-weight:bold; padding:2px 16px; border-radius:14px;">ในกลุ่ม</span>
     <div style="font-size:13px; color:#64748B; margin-bottom:2px;">{ctx.stock_info.get('sector','-')}</div>
-    <div><span style="font-size:28px; color:#0F172A; font-weight:bold;">{rank_txt(sector_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_sector} หุ้น</span></div>
-    {sector_block}
+    <div><span style="font-size:32px; color:#0F172A; font-weight:800;">{rank_txt(sector_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_sector} หุ้น</span></div>{sector_block}
     </div>
     </div>""", unsafe_allow_html=True)
-
     # ---------------- STRATEGIC MATRIX (ย้ายมาจาก r2_c3 เดิม + ขยายใหญ่ขึ้น) ----------------
     with r1_c3:
         matrix_df = ctx.scores_df[['ticker', 'health_score', 'overall_score']].dropna().copy()
@@ -661,7 +639,7 @@ def render(ctx):
         if not weaknesses_ib:
             weaknesses_ib.append("ไม่พบจุดอ่อนเชิงเปรียบเทียบที่ชัดเจน")
 
-        st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:220px;">
+        st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:250px;">
     <div style="font-size:16px; color:#64748B; font-weight:bold; margin-bottom:6px;">COMPETITIVE ADVANTAGE</div>
     <div style="font-size:15px; color:#10B981; font-weight:bold; margin-bottom:2px;">STRENGTHS</div>
     <ul style="color:#475569; font-size:15px; line-height:1.4; padding-left:14px; margin:0 0 6px 0;">{''.join([f'<li>{s}</li>' for s in strengths_ib])}</ul>
@@ -698,7 +676,7 @@ def render(ctx):
         else:
             rank_sentence = f"อยู่อันดับที่ <b>{sector_rank}</b> จาก {n_sector} บริษัทในกลุ่ม {ctx.stock_info.get('sector','-')}"
 
-        st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:220px;">
+        st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:250px;">
     <div style="font-size:16px; color:#64748B; font-weight:bold; margin-bottom:6px;">EXPLAINABLE AI SUMMARY</div>
     <p style="color:#475569; font-size:15px; line-height:1.4; margin:0 0 8px 0;">
     <b>{ctx.selected_ticker}</b> {rank_sentence} (Overall Score {safe(ctx.stock_info.get('overall_score')):.1f}/100) {compare_desc}:</p>

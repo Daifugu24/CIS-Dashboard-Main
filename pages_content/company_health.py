@@ -772,7 +772,7 @@ def render(ctx):
         ])
 
         st.html(f"""
-        <div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px; height:447px; box-sizing:border-box; display:flex; flex-direction:column; overflow-y:auto;">
+        <div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px; height:360px; box-sizing:border-box; display:flex; flex-direction:column; overflow-y:auto;">
             <div style="font-size:13px; color:#64748B; margin-bottom:10px;">
                 {sub_label}
             </div>
