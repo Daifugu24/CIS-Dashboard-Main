@@ -28,7 +28,8 @@ pages_content/company_health.py
 
 === PATCH NOTE 2 ===
 - ทำความสูงกรอบการ์ดทั้ง 3 ใบใน ROW 3 (KEY FINANCIAL HIGHLIGHTS / STRENGTHS / COMPETITOR COMPARISON)
-  ให้เท่ากันโดยกำหนด min-height/height:360px + box-sizing:border-box ให้ตรงกันทั้งหมด
+  ให้เท่ากันโดยกำหนด height:447px + box-sizing:border-box ให้ตรงกันทั้งหมด (แก้ตัวเลขจาก
+  360px เป็น 447px ให้ตรงกับความสูงจริงที่การ์ดอีก 2 ใบใช้อยู่แล้ว มิเช่นนั้นจะไม่เท่ากันจริง)
   (เดิมการ์ด COMPETITOR COMPARISON ไม่ได้ล็อกความสูง ทำให้ขนาดไม่เท่ากับอีก 2 การ์ด)
 """
 
@@ -66,7 +67,6 @@ def render(ctx):
        SELECTBOX : เทียบกับคู่แข่ง
        ========================================================= */
 
-    /* กล่องหลัก */
     [data-testid="stSelectbox"] [data-baseweb="select"] {
         background-color: #FFFFFF !important;
         color: #0F172A !important;
@@ -81,7 +81,6 @@ def render(ctx):
         box-shadow: none !important;
     }
 
-    /* ตัวหนังสือในช่อง */
     [data-testid="stSelectbox"] [data-baseweb="select"] div {
         color: #0F172A !important;
     }
@@ -90,7 +89,6 @@ def render(ctx):
         color: #0F172A !important;
     }
 
-    /* ลูกศร */
     [data-testid="stSelectbox"] [data-baseweb="select"] svg {
         fill: #0F172A !important;
         color: #0F172A !important;
@@ -130,12 +128,10 @@ def render(ctx):
         color: #0F172A !important;
     }
 
-    /* กล่องด้านนอก */
     [data-testid="stDateInput"] > div {
         color: #0F172A !important;
     }
 
-    /* กล่อง input ของ BaseWeb */
     [data-testid="stDateInput"] [data-baseweb="input"] {
         background-color: #FFFFFF !important;
         border: 1px solid #CBD5E1 !important;
@@ -148,7 +144,6 @@ def render(ctx):
         color: #0F172A !important;
     }
 
-    /* input จริง */
     [data-testid="stDateInput"] input {
         background-color: #FFFFFF !important;
         color: #0F172A !important;
@@ -160,13 +155,11 @@ def render(ctx):
         color: #64748B !important;
     }
 
-    /* icon ปฏิทิน */
     [data-testid="stDateInput"] svg {
         fill: #0F172A !important;
         color: #0F172A !important;
     }
 
-    /* label */
     [data-testid="stDateInput"] label {
         color: #0F172A !important;
     }
@@ -277,11 +270,12 @@ def render(ctx):
     col_title, col_date = st.columns([3, 1.2])
 
     with col_title:
+        # หมายเหตุ: แก้แท็ก <div>...</h2> ที่ไม่เข้าคู่กัน (bug จากดราฟก่อนหน้า) ให้เป็น <div>...</div>
         st.html("""
         <div style="margin-bottom:10px;">
             <div style="font-size:26px; font-weight:700; color:#0F172A; letter-spacing:0.3px;">
                 COMPANY HEALTH
-            </h2>
+            </div>
             <div style="font-size:16px; font-weight:400; color:#64748B; margin-top:4px;">
                 ประเมินสุขภาพทางการเงินของบริษัทจากมิติสำคัญตามงบการเงินจริง
             </div>
@@ -761,7 +755,7 @@ def render(ctx):
         # PATCH: เปลี่ยนจาก st.dataframe -> ตาราง HTML พื้นสีขาว
         # (st.dataframe ใช้ glide-data-grid วาดบน canvas
         #  ทำให้ override สีพื้นหลังด้วย CSS ไม่ได้ผล)
-        # PATCH 2: ล็อกความสูงกรอบให้เท่ากับอีก 2 การ์ดในแถวเดียวกัน
+        # PATCH 2: ล็อกความสูงกรอบให้เท่ากับอีก 2 การ์ดในแถวเดียวกัน (447px)
         # (เดิมความสูงยืดตามเนื้อหา ทำให้กรอบไม่เท่ากัน)
         # --------------------------------------------------------
 
@@ -778,7 +772,7 @@ def render(ctx):
         ])
 
         st.html(f"""
-        <div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px; height:360px; box-sizing:border-box; display:flex; flex-direction:column; overflow-y:auto;">
+        <div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:14px; height:447px; box-sizing:border-box; display:flex; flex-direction:column; overflow-y:auto;">
             <div style="font-size:13px; color:#64748B; margin-bottom:10px;">
                 {sub_label}
             </div>
