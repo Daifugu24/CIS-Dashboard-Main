@@ -52,12 +52,21 @@ def render(ctx):
     else:
         m1_badge, m1_desc = "WEAK", "มีความเสี่ยงจากภาระหนี้หรือแรงกดดันด้านอัตรากำไร"
 
-    if m2_s >= 70:
+    # PATCH: FAIR VALUE card ต้องล้อตาม logic เดียวกับหน้า Fair Value จริง (fair_value.py)
+    # ซึ่งตัดสิน badge/สี จาก margin_of_safety (val_mos) ไม่ใช่ valuation_score
+    # (>10 = UNDERVALUED เขียว, < -10 = OVERVALUED แดง, อื่นๆ = FAIR VALUE เหลือง)
+    # ส่วนตัวเลขในวงแหวนยังคงเป็น valuation_score (m2_s) เหมือนเดิม เพื่อให้ตรงกับ
+    # ตัวเลข "42/100" ที่โชว์อยู่ในหน้า Fair Value เอง (val_score ก็คือ valuation_score)
+    val_mos = safe(ctx.stock_info.get('margin_of_safety'), 10.0)
+    if val_mos > 10:
         m2_badge, m2_desc = "UNDERVALUED", "ราคาหุ้นน่าสนใจเมื่อเทียบกับมูลค่าพื้นฐาน"
-    elif m2_s >= 45:
-        m2_badge, m2_desc = "FAIR VALUE", "ราคาซื้อขายอยู่ใกล้เคียงกับมูลค่าพื้นฐาน"
-    else:
+        m2_color = "#10B981"
+    elif val_mos < -10:
         m2_badge, m2_desc = "OVERVALUED", "ราคาหุ้นสูงกว่ามูลค่าพื้นฐานที่ประเมินได้"
+        m2_color = "#EF4444"
+    else:
+        m2_badge, m2_desc = "FAIR VALUE", "ราคาซื้อขายอยู่ใกล้เคียงกับมูลค่าพื้นฐาน"
+        m2_color = "#F59E0B"
 
     if m3_s >= 67:
         m3_badge, m3_desc = "BULLISH", "แนวโน้มราคาเป็นขาขึ้นและมีโมเมนตัมแข็งแกร่ง"
@@ -101,6 +110,11 @@ def render(ctx):
         if score >= green_at: return "rgba(16,185,129,0.08)"
         elif score >= yellow_at: return "rgba(245,158,11,0.08)"
         return "rgba(239,68,68,0.08)"
+
+    def _rgba_from_hex(hex_color, alpha):
+        hex_color = hex_color.lstrip('#')
+        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+        return f"rgba({r},{g},{b},{alpha})"
 
     overall = safe(ctx.stock_info.get('overall_score'), 50)
     rec = ctx.stock_info.get('recommendation', 'ACCUMULATE')
@@ -616,16 +630,23 @@ def render(ctx):
     with col_center:
 
         def module_card(num, label, score, badge, desc, green_at, yellow_at,
-                         display_value=None, display_total=None, highlight=False):
-            color = score_color(score, green_at, yellow_at)
-            badge_bg = score_bg(score, green_at, yellow_at)
+                         display_value=None, display_total=None, highlight=False, color_override=None):
+            # color_override: ใช้เมื่อสีของการ์ดต้องอ้างอิงจากตัวชี้วัดอื่น (เช่น
+            # FAIR VALUE ที่ยึดสีตาม margin_of_safety เหมือนหน้า Fair Value จริง)
+            # แทนการคำนวณจาก score/green_at/yellow_at ตามปกติ — ไม่กระทบการ์ดอื่น
+            # ที่ไม่ได้ส่งค่านี้มา (ยังคำนวณสีจาก score เหมือนเดิมทุกใบ)
+            color = color_override if color_override else score_color(score, green_at, yellow_at)
+            badge_bg = _rgba_from_hex(color, 0.20) if color_override else score_bg(score, green_at, yellow_at)
             top_val = score if display_value is None else display_value
             bottom_val = 100 if display_total is None else display_total
 
             # การ์ดที่ highlight=True (Industry Benchmark) จะได้พื้นหลังสีอ่อน
             # และขอบหนาขึ้นตามสีสถานะ (เขียว/เหลือง/แดง) ส่วนการ์ดอื่นยังพื้นขาว/
             # ขอบเทาเหมือนเดิมทั้งหมด ไม่กระทบ logic การคำนวณคะแนนใด ๆ
-            card_bg = score_bg_light(score, green_at, yellow_at) if highlight else "#FFFFFF"
+            if highlight:
+                card_bg = _rgba_from_hex(color, 0.08) if color_override else score_bg_light(score, green_at, yellow_at)
+            else:
+                card_bg = "#FFFFFF"
             card_border = color if highlight else "#E2E8F0"
             border_width = "1.5px" if highlight else "1px"
 
@@ -673,7 +694,7 @@ def render(ctx):
             module_card(None, "INDUSTRY BENCHMARK", m6_s, m6_badge, m6_desc, 70, 45,
                         display_value=overall_rank, display_total=n_all, highlight=True),
             module_card("01", "COMPANY HEALTH", m1_s, m1_badge, m1_desc, 70, 45),
-            module_card("02", "FAIR VALUE", m2_s, m2_badge, m2_desc, 67, 34),
+            module_card("02", "FAIR VALUE", m2_s, m2_badge, m2_desc, 67, 34, color_override=m2_color),
             module_card("03", "ENTRY TIMING", m3_s, m3_badge, m3_desc, 67, 34),
             module_card("04", "AI PREDICTION", m4_s, m4_badge, m4_desc, 70, 50),
             module_card("05", "RISK ANALYSIS", m5_s, m5_badge, m5_desc, 65, 45),
