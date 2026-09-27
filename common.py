@@ -16,14 +16,6 @@ common.py
 4. การเชื่อมต่อฐานข้อมูล + auto-healing (database_is_ready, build_database, load_all_data)
 5. PageContext — โครงสร้างข้อมูลที่ส่งต่อให้ทุกหน้า
 6. render_sidebar() / render_header_bar() — UI ส่วนที่ใช้ร่วมกันทุกหน้า
-
-=== PATCH NOTE (Industry Benchmark เด่นถาวรใน Navigation เพราะเป็นหน้าหลัก) ===
-- ในฟังก์ชัน render_sidebar() เพิ่ม CSS ให้เมนู "Industry Benchmark" (ตัวแรกสุดใน
-  radiogroup ตามลำดับ PAGES) มีกรอบ/พื้นอ่อนสีธีม (นำสีเดิมจาก nav_colors[" Industry
-  Benchmark"] มาใช้) แสดงอยู่ "ถาวร" ไม่ว่าจะกดไปหน้าอื่นอยู่หรือไม่ก็ตาม ต่างจาก
-  เมนูอื่นที่จะมีกรอบ/พื้นสีเฉพาะตอนถูกเลือก (:checked) เท่านั้น เพื่อให้ผู้ใช้เห็นชัดว่า
-  หน้านี้คือหน้าหลัก/หน้าแรกของแดชบอร์ดเสมอ ไม่กระทบ logic การนำทาง (nav_page,
-  pending_nav, selected_ticker) ใดๆ เลย
 """
 
 import streamlit as st
@@ -639,10 +631,6 @@ def render_sidebar(scores_df):
 
     active_color = nav_colors.get(selected_page, "#3B82F6")
 
-    # สีเด่นถาวรของ Industry Benchmark (หน้าหลัก) — ใช้สีเดียวกับใน nav_colors
-    # เพื่อไม่ให้ต้องดูแลค่าสีซ้ำสองที่
-    industry_color = nav_colors.get(" Industry Benchmark", "#06B6D4")
-
     st.markdown(
         f"""
         <style>
@@ -660,29 +648,6 @@ def render_sidebar(scores_df):
         div[role="radiogroup"]
         label:has(input:checked) p {{
             color: {active_color} !important;
-            font-weight: 700 !important;
-        }}
-
-        /* =========================================================
-           INDUSTRY BENCHMARK — เด่นถาวรเพราะเป็นหน้าหลัก
-           ตัวแรกสุดใน radiogroup เสมอ (ตามลำดับ PAGES) จึงใช้ nth-of-type(1)
-           กรอบ/พื้นอ่อนสีธีมนี้แสดงตลอดเวลา ไม่ว่าจะเลือกหน้าไหนอยู่ก็ตาม
-           (คนละส่วนกับ style ":checked" ด้านบนซึ่งมีผลเฉพาะตอนถูกเลือกเท่านั้น)
-           ========================================================= */
-
-        [data-testid="stSidebar"]
-        [data-testid="stRadio"]
-        div[role="radiogroup"]
-        label:nth-of-type(1) {{
-            background-color: {industry_color}12 !important;
-            border: 1px solid {industry_color}55 !important;
-        }}
-
-        [data-testid="stSidebar"]
-        [data-testid="stRadio"]
-        div[role="radiogroup"]
-        label:nth-of-type(1) p {{
-            color: {industry_color} !important;
             font-weight: 700 !important;
         }}
 
