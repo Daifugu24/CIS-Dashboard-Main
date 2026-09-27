@@ -77,6 +77,29 @@ pages_content/industry_benchmark.py
 - RADAR (r2_c2) คงความสูงไว้ที่ 440px ตามเดิม เป็นค่าความสูงอ้างอิงกลาง ๆ ที่ดู
   สมส่วนกับความสูงเฉลี่ยของการ์ด Dimension ในเคสส่วนใหญ่ (ไม่กระทบ logic การ
   คำนวณ percentile / ai_score เดิม)
+
+=== PATCH NOTE 7 (ย่อ RADAR ให้ label ไม่ล้นตอนบีบความสูง) ===
+- ระหว่างปรับความสูงกราฟ RADAR ให้เข้ากับเลย์เอาต์ใหม่ ได้ลอง shrink
+  polar.domain ลงเพื่อเผื่อระยะขอบให้ label ไม่ชนกรอบการ์ด แต่ค่าที่ใช้ตอนนั้น
+  หดโดเมนแคบเกินไป ทำให้วงกลมของกราฟดูเล็ก มีพื้นที่ว่างเหลือรอบขอบเยอะเกินจำเป็น
+  (แก้ต่อใน PATCH NOTE 8 ด้านล่าง)
+
+=== PATCH NOTE 8 (bugfix): PATCH NOTE 7 หด polar.domain มากไป ===
+- PATCH NOTE 7 หด polar.domain มากไป ทำให้ตัวกราฟวงกลมดูเล็กเกินไป เหลือพื้นที่ว่างเยอะรอบขอบ
+  (โดยเฉพาะช่วงบนใต้ title) แก้โดยขยาย domain ให้กราฟใหญ่ขึ้นอีกครั้ง แต่ยังเว้นระยะพอให้ label
+  ไม่ชนขอบกรอบเหมือนที่ตั้งใจไว้ใน PATCH NOTE 7 (กรอบนอก 470px เท่าเดิม)
+
+=== PATCH NOTE 9 (merge resolution: รวม branch "ลอง" x "main") ===
+- ลบบล็อกดาวน์โหลด CSV ("EXPORT & INDUSTRY DATA") ที่อยู่ท้ายหน้าออกทั้งหมด ตามที่ branch
+  "ลอง" ตั้งใจไว้ (ระบุไว้ชัดว่า "ตามคำขอ") ไม่กระทบ logic หรือการ์ดอื่นใดในหน้านี้
+- การ์ด RANKING: รวมข้อดีของทั้งสอง branch เข้าด้วยกัน — คงป้าย "Top {pct}%" ของบล็อก
+  "ทั้งตลาด" ไว้ (จาก main เพราะเป็นข้อมูลที่มีประโยชน์ และตรงกับ PATCH NOTE แรกสุดของไฟล์นี้)
+  และคง flex:1 + justify-content:center ของทั้งสองบล็อกไว้ด้วย (จาก "ลอง" เพราะการ์ดนี้ fix
+  height 360px + overflow:hidden — ถ้าไม่ใช้ flex เนื้อหาเสี่ยงโดนตัดหรือดูไม่สมดุลระหว่างสองบล็อก)
+- PEER COMPARISON: พบว่า branch "ลอง" มีโค้ดคำนวณ val_c และ timing_b/ai_b/risk_b/name_disp/
+  rows_html ซ้ำอยู่ 2 ชุดในลูปเดียวกัน (โผล่ทั้งก่อนและหลัง conflict marker) ซึ่งเป็นบั๊กจริง —
+  ถ้าปล่อยไว้แถวของหุ้นแต่ละตัวจะถูก append เข้า rows_html สองครั้ง ทำให้ตารางมีแถวซ้ำ 2 เท่า
+  แก้โดยเหลือโค้ดคำนวณแต่ละส่วนไว้ชุดเดียวต่อรอบ loop
 """
 import streamlit as st
 import pandas as pd
@@ -118,14 +141,23 @@ def render(ctx):
 
     single_member_sector = n_sector < 2
 
+    # ดาว/label อ้างอิงตาม percentile ของอันดับ "ทั้งตลาด" (overall_rank เทียบ n_all)
+    # เพื่อให้จำนวนดาวสอดคล้องกับ Top % ที่แสดงในการ์ด RANKING เสมอ
+    # (ไม่ใช้ sector_rank ตัดสินดาวอีกต่อไป เพราะกลุ่มเล็กทำให้ตัวเลขบิดเบือนได้)
     if no_data:
         position_label, pos_stars = "INSUFFICIENT DATA", 0
-    elif single_member_sector:
-        position_label = "INDUSTRY LEADER" if overall_rank == 1 else ("STRONG COMPETITOR" if overall_rank <= max(2, n_all // 2) else "LAGGING PEER")
-        pos_stars = 5 if overall_rank == 1 else (4 if overall_rank <= max(2, n_all // 2) else 2)
     else:
-        position_label = "INDUSTRY LEADER" if sector_rank == 1 else ("STRONG COMPETITOR" if sector_rank <= max(2, n_sector // 2) else "LAGGING PEER")
-        pos_stars = 5 if sector_rank == 1 else (4 if sector_rank <= max(2, n_sector // 2) else 2)
+        market_score = 100 - (overall_rank - 1) / max(n_all - 1, 1) * 100
+        if overall_rank == 1:
+            position_label, pos_stars = "INDUSTRY LEADER", 5
+        elif market_score >= 60:
+            position_label, pos_stars = "STRONG COMPETITOR", 4
+        elif market_score >= 40:
+            position_label, pos_stars = "AVERAGE PERFORMER", 3
+        elif market_score >= 20:
+            position_label, pos_stars = "BELOW AVERAGE", 2
+        else:
+            position_label, pos_stars = "LAGGING PEER", 1
 
     # ---------------- STRATEGIC INVESTMENT POSITION ----------------
     with r1_c1:
@@ -150,7 +182,6 @@ def render(ctx):
     <div style="color:{star_color}; font-size:24px; letter-spacing:4px; margin-top:6px;">{'★'*pos_stars}{'☆'*(5-pos_stars)}</div>
     </div>
     </div>
-    <p style="color:#64748B; font-size:15px; line-height:1.4; margin:0;">{position_caption}</p>
     </div>""", unsafe_allow_html=True)
 
     # ---------------- RANKING ----------------
@@ -162,18 +193,18 @@ def render(ctx):
         sector_block = (
             f"""<span style="display:inline-block; margin-top:6px; background-color:rgba(100,116,139,0.10); color:#64748B; font-size:15px; font-weight:bold; padding:3px 14px; border-radius:8px;">กลุ่มมีเพียง 1 หุ้น</span>"""
             if single_member_sector else
-            f"""<span style="display:inline-block; margin-top:6px; background-color:rgba(245,158,11,0.15); color:#F59E0B; font-size:15px; font-weight:bold; padding:3px 14px; border-radius:8px;">Top {pct_in_sector}%</span>"""
+            ""
         )
 
         st.markdown(f"""<div style="background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:14px; height:360px; text-align:center; display:flex; flex-direction:column; overflow:hidden; box-sizing:border-box;">
     <div style="font-size:16px; color:#64748B; font-weight:bold; margin-bottom:8px;">RANKING</div>
-    <div style="background-color:{cup_bg}; border:1.5px solid {star_color}; border-radius:12px; padding:8px 8px 10px 8px; margin-bottom:10px;">
+    <div style="background-color:{cup_bg}; border:1.5px solid {star_color}; border-radius:12px; padding:8px 8px 10px 8px; margin-bottom:10px; flex:1; display:flex; flex-direction:column; justify-content:center;">
     <div style="font-size:14px; color:#0F172A; font-weight:bold;">ทั้งตลาด</div>
     <div style="font-size:13px; color:#64748B; margin-bottom:2px;">{n_all} หุ้นที่ติดตาม</div>
     <div><span style="font-size:32px; color:#0F172A; font-weight:800;">{rank_txt(overall_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_all} หุ้น</span></div>
     <span style="display:inline-block; margin-top:6px; background-color:{star_color}; color:#FFFFFF; font-size:14px; font-weight:bold; padding:3px 14px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.12);">Top {pct_overall}%</span>
     </div>
-    <div style="border-top:1px solid #E2E8F0; padding-top:10px;">
+    <div style="border-top:1px solid #E2E8F0; padding-top:10px; flex:1; display:flex; flex-direction:column; justify-content:center;">
     <div style="font-size:14px; color:#64748B;">ในกลุ่ม</div>
     <div style="font-size:13px; color:#64748B; margin-bottom:2px;">{ctx.stock_info.get('sector','-')}</div>
     <div><span style="font-size:28px; color:#0F172A; font-weight:bold;">{rank_txt(sector_rank)}</span> <span style="font-size:14px; color:#64748B;">/ {n_sector} หุ้น</span></div>
@@ -674,19 +705,5 @@ def render(ctx):
     <div style="color:#475569; font-size:15px; line-height:1.5;">
     {metric_rows}
     </div></div>""", unsafe_allow_html=True)
-
-    import base64
-
-    csv_text = ctx.scores_df[
-        ctx.scores_df['ticker'] == ctx.selected_ticker
-    ].to_csv(index=False)
-
-    b64_csv = base64.b64encode(csv_text.encode('utf-8-sig')).decode()
-    download_link = f'data:file/csv;base64,{b64_csv}'
-
-    st.markdown(f"""<div style="display:flex; justify-content:space-between; align-items:center; background-color:#FFFFFF; border:1px solid #E2E8F0; border-radius:8px; padding:10px 14px; margin-top:12px;">
-    <div style="font-size:15px; color:#475569;"><b>EXPORT & INDUSTRY DATA</b><br><span style="color:#64748B; font-size:14px;">ดาวน์โหลดคะแนนวิเคราะห์ทั้งหมดของ {ctx.selected_ticker} (ข้อมูลจริงจาก cis_summary_scores)</span></div>
-    <a href="{download_link}" download="{ctx.selected_ticker}_CIS_Analysis.csv" style="background:#3B82F6; color:white; border:none; padding:6px 14px; border-radius:6px; font-size:14px; text-decoration:none; display:inline-block; font-weight:bold; cursor:pointer;">📥 Export Data (CSV)</a>
-    </div>""", unsafe_allow_html=True)
 
     render_nav_footer("m7", prev_page=None, next_page=" Stock Overview", show_home=False)

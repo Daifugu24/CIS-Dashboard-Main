@@ -47,6 +47,16 @@ Changelog vs v3.1:
   ด้วยไอคอน/สีเทาเหมือนรายการอื่นในกลุ่มเดียวกัน แทนที่จะ crash หรือแสดง
   ค่าเท็จเมื่อคำนวณไม่ได้
 - ปุ่มเปลี่ยนหน้าด้านล่างใช้ label แบบไม่มี emoji ให้ตรงกับหน้าอื่นทั้งหมด
+
+=== PATCH NOTE (theme + typography) ===
+- NEUTRAL: เปลี่ยนสีธีมจากสีฟ้า (ACCENT เดิมที่ backend ส่งมาใน sig["status_color"])
+  เป็นสีเหลือง (AMBER) เพื่อไม่ให้ปนกับสีฟ้าที่ใช้เป็น accent สี highlight ทั่วทั้งหน้า
+  ทำเป็น UI-only override หลังอ่านค่าจาก classify_signal() แล้ว (ไม่แตะ label /
+  readiness / action ที่ยังต้องยึดจาก backend เป็น single source of truth ตามเดิม)
+- ปรับขนาดฟอนต์จุดที่เล็กกว่ามาตรฐานของหน้าอื่น (10-11.5px) ให้อยู่ในช่วง
+  12-13px ให้สอดคล้องกับสเกลฟอนต์ของหน้า Company Health (บรรทัดข้อมูล header
+  bar, ป้ายชื่อ missing_fields, กล่องเหตุผลในหน้า "ข้อมูลไม่เพียงพอ", และ
+  หมายเหตุใน SYSTEM SCORING METHODOLOGY)
 """
 import html
 import json
@@ -111,7 +121,7 @@ def _render_html(markup):
 
 def _metric_card(label, value, sub="", value_color=TEXT_WHITE, is_summary=False, card_bg=BG_CARD):
     content_style = (
-        f"font-size:14px;font-weight:700;color:{value_color};margin-top:4px;"
+        f"font-size:15px;font-weight:700;color:{value_color};margin-top:4px;"
         "overflow:hidden;text-overflow:ellipsis;display:-webkit-box;"
         "-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35;"
         if is_summary
@@ -130,7 +140,7 @@ def _metric_card(label, value, sub="", value_color=TEXT_WHITE, is_summary=False,
         <div style="{content_style}">
             {value}
         </div>
-        <div style="font-size:13px;color:{'#FFFFFF' if card_bg != BG_CARD else TEXT_MUTED};margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        <div style="font-size:14px;color:{'#FFFFFF' if card_bg != BG_CARD else TEXT_MUTED};margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             {sub}
         </div>
     </div>
@@ -174,46 +184,6 @@ def _missing_list(raw):
         return []
 
 
-def _render_header_bar(ticker_safe, sector_label, c_p, price_chg_pct, pe_ratio, roe_pct, data_as_of):
-    chg_color = GREEN if (price_chg_pct or 0.0) >= 0 else RED
-    chg_arrow = "▲" if (price_chg_pct or 0.0) >= 0 else "▼"
-    price_html = (
-        f'<b style="color:{TEXT_WHITE};font-size:14px;">{c_p:.2f} THB</b>'
-        if c_p is not None else f'<b style="color:{TEXT_MUTED};font-size:14px;">N/A</b>'
-    )
-    chg_html = (
-        f'<span style="color:{chg_color};font-weight:700;">({price_chg_pct:+.2f}%) {chg_arrow}</span>'
-        if price_chg_pct is not None else ""
-    )
-    pe_html = (
-        f'<div><span style="color:{TEXT_MUTED};">P/E:</span> <b style="color:{TEXT_WHITE};">{pe_ratio}x</b></div>'
-        if pe_ratio not in (None, "") else ""
-    )
-    roe_html = (
-        f'<div><span style="color:{TEXT_MUTED};">ROE:</span> <b style="color:{TEXT_WHITE};">{roe_pct}%</b></div>'
-        if roe_pct not in (None, "") else ""
-    )
-    _render_html(
-        f"""
-        <div style="{_card_style('display:flex;justify-content:space-between;align-items:center;padding:12px 20px;margin-bottom:12px;')}">
-            <div style="font-size:18px;font-weight:900;color:{TEXT_WHITE};letter-spacing:.5px;">
-                {ticker_safe} <span style="font-size:11.5px;font-weight:500;color:{TEXT_MUTED};">{sector_label}</span>
-            </div>
-            <div style="display:flex;gap:20px;font-size:11.5px;align-items:center;">
-                <div>
-                    <span style="color:{TEXT_MUTED};">Price:</span>
-                    {price_html} {chg_html}
-                </div>
-                {pe_html} {roe_html}
-                <div>
-                    <span style="color:{TEXT_MUTED};">Data as of:</span>
-                    <b style="color:{ACCENT};">{data_as_of}</b>
-                </div>
-            </div>
-        </div>
-        """
-    )
-
 
 def _render_insufficient(sig, reason, missing_fields):
     """ISSUE 01: หน้าจอสถานะ "ยังไม่ได้ประเมิน"
@@ -222,11 +192,11 @@ def _render_insufficient(sig, reason, missing_fields):
     """
     missing_html = (
         "".join(
-            f'<span style="background:{BG_CHIP};color:{TEXT_MUTED};font-size:10px;font-weight:700;'
+            f'<span style="background:{BG_CHIP};color:{TEXT_MUTED};font-size:12px;font-weight:700;'
             f'padding:3px 8px;border-radius:4px;margin:0 4px 4px 0;display:inline-block;">{html.escape(str(m))}</span>'
             for m in missing_fields
         )
-        or f'<span style="font-size:10.5px;color:{TEXT_MUTED};">ไม่ระบุรายการ</span>'
+        or f'<span style="font-size:12.5px;color:{TEXT_MUTED};">ไม่ระบุรายการ</span>'
     )
     _render_html(
         f"""
@@ -245,15 +215,15 @@ def _render_insufficient(sig, reason, missing_fields):
                         padding-bottom:6px;margin-bottom:10px;">
                 ⚠️ ข้อมูลไม่เพียงพอ — ระบบยังไม่ได้ประเมินหลักทรัพย์นี้
             </div>
-            <div style="font-size:11.5px;color:{TEXT};line-height:1.6;">
+            <div style="font-size:13px;color:{TEXT};line-height:1.6;">
                 {html.escape(str(reason))}
             </div>
-            <div style="margin-top:10px;font-size:10px;font-weight:800;color:{TEXT_MUTED};letter-spacing:.5px;">
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:{TEXT_MUTED};letter-spacing:.5px;">
                 ตัวชี้วัดที่ขาด
             </div>
             <div style="margin-top:6px;">{missing_html}</div>
             <div style="margin-top:12px;background:rgba(100,116,139,.10);border-left:3px solid {GRAY};
-                        padding:8px 12px;border-radius:0 6px 6px 0;font-size:10.5px;color:{TEXT};">
+                        padding:8px 12px;border-radius:0 6px 6px 0;font-size:12.5px;color:{TEXT};">
                 <b>หมายเหตุ:</b> ระบบจงใจไม่แสดงคะแนนใด ๆ ในสถานะนี้ —
                 <b>ไม่มีข้อมูล ไม่เท่ากับ ปานกลาง</b>
                 การแสดงคะแนน 50 / NEUTRAL ให้หลักทรัพย์ที่ข้อมูลแหว่ง
@@ -295,7 +265,6 @@ def render(ctx):
 
     # ---- ISSUE 01: ข้อมูลไม่พอ -> ออกจาก render() ตั้งแต่ต้น ----
     if total_score is None or data_status == "INSUFFICIENT_DATA":
-        _render_header_bar(ticker_safe, sector_label, c_p, price_chg_pct, pe_ratio, roe_pct, data_as_of)
         reason = str(info.get("data_status_reason") or info.get("summary_text") or sig["summary_text"])
         _render_insufficient(sig, reason, _missing_list(info.get("missing_fields")))
         render_nav_footer("m3", prev_page=" Fair Value", next_page=" AI Prediction")
@@ -305,6 +274,13 @@ def render(ctx):
     status_color = sig["status_color"]
     action_th = sig["action_th"]
     readiness = sig["readiness"]
+
+    # PATCH (theme): NEUTRAL ใช้สีเหลือง (AMBER) แทนสีฟ้าเดิมที่ backend ส่งมา
+    # เป็น UI-only override — label / readiness / action ยังคงยึดจาก
+    # classify_signal() เหมือนเดิมตาม single-source-of-truth ด้านบน
+    # เปลี่ยนเฉพาะสีที่ใช้ "แสดงผล" บนหน้านี้เท่านั้น
+    if status_label == "NEUTRAL":
+        status_color = AMBER
 
     adx_val = _num(info.get("adx")) or 0.0
     r1 = _num(info.get("resistance_60d")) or c_p * 1.05
@@ -439,7 +415,6 @@ def render(ctx):
         summary_text = f"ผ่าน {bullish_count}/{total_checks} เกณฑ์ --- <b>สัญญาณยังไม่ครบถ้วน ควรงดเข้าซื้อ</b>"
 
     # --- TOP HEADER BAR ---
-    _render_header_bar(ticker_safe, sector_label, c_p, price_chg_pct, pe_ratio, roe_pct, data_as_of)
     readiness_color = GREEN if readiness == "READY" else AMBER
 
     confidence_dots = "".join([
@@ -451,8 +426,14 @@ def render(ctx):
 
     kpi_html = f"""
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr;gap:10px;margin-bottom:12px;">
+        {_metric_card(
+            "ENTRY READINESS",
+            readiness,
+            "รอการยืนยันสัญญาณเพิ่มเติม" if readiness != "READY" else "สัญญาณครบตามเกณฑ์",
+            "#FFFFFF",
+            card_bg=readiness_color
+        )}
         {_metric_card("MARKET TREND", status_label, action_th, status_color)}
-        {_metric_card("ENTRY READINESS", readiness, "รอการยืนยันสัญญาณเพิ่มเติม" if readiness != "READY" else "สัญญาณครบตามเกณฑ์", readiness_color)}
         <div style="{_card_style()}">
             <div style="font-size:14px;font-weight:800;color:{TEXT_MUTED};letter-spacing:.5px;">CONFIDENCE</div>
             <div style="font-size:20px;font-weight:900;color:{TEXT_WHITE};margin-top:4px;">{bullish_count} / {total_checks}</div>
@@ -766,7 +747,7 @@ def render(ctx):
                     <b style="color:{TEXT_WHITE};">Reward / Risk --- 30 pts</b><br>
                     ประเมินจากผลตอบแทนเทียบกับ downside
                     <br><br>
-                    <span style="font-size:12.5px;">ตัวชี้วัดที่ไม่มีข้อมูลได้ 0 คะแนน ระบบไม่ลดตัวหารให้
+                    <span style="font-size:14px;">ตัวชี้วัดที่ไม่มีข้อมูลได้ 0 คะแนน ระบบไม่ลดตัวหารให้
                     เพื่อให้ทุกหลักทรัพย์ถูกวัดด้วยมาตรฐานเดียวกัน</span>
                 </div>
             </div>
