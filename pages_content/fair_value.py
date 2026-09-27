@@ -14,6 +14,12 @@ pages_content/fair_value.py
     ctx.current_price, ctx.change_pct, ctx.change_val, ctx.change_color, ctx.change_sign, ctx.arrow_sign
 
 ห้ามแก้ CSS ส่วนกลางหรือ helper function ใน common.py จากไฟล์นี้ — ถ้าจำเป็นต้องแก้ ให้แจ้ง Layout Lead ก่อน
+
+=== PATCH NOTE (ตัดแถว Min/Max ออกจากการ์ด FAIR VALUE RANGE) ===
+- เอาแถว "Min {val_bear} THB / Max {val_bull} THB" ที่อยู่ใต้แถบไล่สี (gradient bar)
+  ออก เพราะตัวเลขชุดเดียวกัน (Lower Estimate / Upper Estimate) ถูกแสดงซ้ำอยู่แล้ว
+  ในการ์ด "FAIR VALUE RANGE — DCF vs P/E RELATIVE" แถวถัดไป (r2_c1) ไม่กระทบ
+  ตัวแปร val_bear/val_bull หรือ logic การคำนวณตำแหน่งหมุด (pos_cur/pos_base) ใดๆ
 """
 import streamlit as st
 import pandas as pd
@@ -141,12 +147,8 @@ def render(ctx):
         </div>
         <div style="position:absolute; left:{pos_base:.1f}%; top:34px; transform:translateX(-50%); white-space:nowrap;">
         <div style="width:0; height:0; margin:0 auto; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:7px solid {val_color};"></div>
-        <div style="background:{val_color}; color:#FFFFFF; font-size:12px; font-weight:bold; border-radius:8px; padding:6px 12px;">Blended Fair Value <span style="font-weight:normal; opacity:0.9;">{val_base:.2f} THB</span></div>
+        <div style="background:{val_color}; color:#FFFFFF; font-size:12px; font-weight:bold; border-radius:8px; padding:6px 12px;">Estimated Fair Value <span style="font-weight:normal; opacity:0.9;">{val_base:.2f} THB</span></div>
         </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748B; margin-top:4px;">
-        <div>Min<br><b style="color:#0F172A; font-size:13px;">{val_bear:.2f} THB</b></div>
-        <div style="text-align:right;">Max<br><b style="color:#0F172A; font-size:13px;">{val_bull:.2f} THB</b></div>
         </div>
         </div>""",
             unsafe_allow_html=True
