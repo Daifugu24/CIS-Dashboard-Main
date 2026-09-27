@@ -43,6 +43,19 @@ def render(ctx):
         100 - (overall_rank - 1) / max(n_all - 1, 1) * 100
     ))
 
+    # PATCH: สีของการ์ด INDUSTRY BENCHMARK ต้องล้อตาม star_color ในหน้า Industry
+    # Benchmark จริง (industry_benchmark.py) ซึ่งตัดสินจาก overall_rank/market_score
+    # (m6_s ตัวเดียวกันนี้คือ market_score ในหน้านั้นเป๊ะๆ): rank 1 = เขียว (Industry
+    # Leader), market_score >= 60 = เหลือง (Strong Competitor), ต่ำกว่านั้น = แดง
+    # (Average Performer ลงไป) — เดิม Overview ใช้ threshold 70/45 ของตัวเองซึ่ง
+    # ไม่ตรงกับหน้าจริง ทำให้สีหลุดกันได้
+    if overall_rank == 1:
+        m6_color = "#10B981"
+    elif m6_s >= 60:
+        m6_color = "#F59E0B"
+    else:
+        m6_color = "#EF4444"
+
     n_sector = len(ctx.sector_peers)
 
     if m1_s >= 70:
@@ -692,7 +705,7 @@ def render(ctx):
         # และใช้เลขกำกับเหมือนเดิมทุกประการ
         cards_html = "".join([
             module_card(None, "INDUSTRY BENCHMARK", m6_s, m6_badge, m6_desc, 70, 45,
-                        display_value=overall_rank, display_total=n_all, highlight=True),
+                        display_value=overall_rank, display_total=n_all, highlight=True, color_override=m6_color),
             module_card("01", "COMPANY HEALTH", m1_s, m1_badge, m1_desc, 70, 45),
             module_card("02", "FAIR VALUE", m2_s, m2_badge, m2_desc, 67, 34, color_override=m2_color),
             module_card("03", "ENTRY TIMING", m3_s, m3_badge, m3_desc, 67, 34),
