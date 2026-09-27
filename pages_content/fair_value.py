@@ -330,7 +330,7 @@ def render(ctx):
         fv_hist = ctx.fair_value_yearly_df[ctx.fair_value_yearly_df['ticker'] == ctx.selected_ticker].sort_values('year') if not ctx.fair_value_yearly_df.empty else pd.DataFrame()
         if not fv_hist.empty:
             fig_hist_val = go.Figure()
-            fig_hist_val.add_trace(go.Scatter(x=fv_hist['year'].astype(str), y=fv_hist['fair_value'], mode='lines+markers', name='Fair Value', line=dict(color='#A855F7', width=1.8, dash='dash')))
+            fig_hist_val.add_trace(go.Scatter(x=fv_hist['year'].astype(str), y=fv_hist['fair_value'], mode='lines+markers', name='Fair Value', line=dict(color=val_color, width=1.8, dash='dash'), marker=dict(size=8, color=val_color)))
             fig_hist_val.add_trace(go.Scatter(x=fv_hist['year'].astype(str), y=fv_hist['price'], mode='lines+markers', name='Actual Price', line=dict(color='#38BDF8', width=2), marker=dict(size=9, color='#38BDF8')))
             fig_hist_val.update_layout(
                 height=190, margin=dict(l=25, r=15, t=10, b=55), paper_bgcolor="#FFFFFF", plot_bgcolor="#FFFFFF",
