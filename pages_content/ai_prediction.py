@@ -528,12 +528,12 @@ def render(ctx):
                 )
             )
             fig_shap.update_layout(
-                height=310,
-                margin=dict(l=10, r=50, t=15, b=15),
+                height=240,
+                margin=dict(l=10, r=50, t=10, b=10),
                 paper_bgcolor="#FFFFFF",
                 plot_bgcolor="#FFFFFF",
-                xaxis=dict(gridcolor="#D9E2EC", tickfont=dict(size=11, color=MUTED), zeroline=False),
-                yaxis=dict(tickfont=dict(size=11.5, color="#334155"), gridcolor="#D9E2EC", zeroline=False),
+                xaxis=dict(gridcolor="#D9E2EC", tickfont=dict(size=10, color=MUTED), zeroline=False),
+                yaxis=dict(tickfont=dict(size=10.5, color="#334155"), gridcolor="#D9E2EC", zeroline=False),
                 showlegend=False
             )
             show_chart(fig_shap, key="ai_feature_importance", expand_height=650)
@@ -543,11 +543,11 @@ def render(ctx):
     with exp_c2:
         top_feat = fi.sort_values('importance', ascending=False).iloc[0]['feature'] if not fi.empty else "N/A"
         st.markdown(
-            f"""<div style="background-color:#FFFFFF; border:1px solid #D9E2EC; border-radius:12px; padding:22px; min-height:310px; display:flex; flex-direction:column; justify-content:center;">
-<div style="font-size:13.5px; font-weight:bold; color:{MUTED}; letter-spacing:0.5px; margin-bottom:12px;">
+            f"""<div style="background-color:#FFFFFF; border:1px solid #D9E2EC; border-radius:12px; padding:18px; min-height:240px; display:flex; flex-direction:column; justify-content:center;">
+<div style="font-size:13px; font-weight:bold; color:{MUTED}; letter-spacing:0.5px; margin-bottom:10px;">
 EXPLAINABLE AI SUMMARY
 </div>
-<p style="font-size:14px; color:#334155; line-height:1.7; margin:0;">
+<p style="font-size:13.5px; color:#334155; line-height:1.6; margin:0;">
 โมเดลใช้ 6 ตัวชี้วัดเชิงเทคนิคในการทำนาย โดย feature ที่มีอิทธิพลต่อผลทำนายของ
 <b>{ctx.selected_ticker}</b> สูงสุดคือ
 <b style="color:{BLUE};">{top_feat}</b>
