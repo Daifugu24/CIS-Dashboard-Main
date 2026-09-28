@@ -514,7 +514,7 @@ def render(ctx):
             fig_shap = go.Figure(
                 go.Bar(
                     x=fi['importance'], y=fi['feature'], orientation='h',
-                    marker=dict(color=),"#8B5CF6"
+                    marker=dict(color='#8B5CF6'),
                     text=[f"{v:.3f}" for v in fi['importance']],
                     textposition='outside',
                     textfont=dict(size=11, color='#334155')
